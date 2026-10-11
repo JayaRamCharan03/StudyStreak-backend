@@ -40,6 +40,14 @@ public class DatabaseConfig {
             rawUrl = url;
         }
 
+        // If running in cloud (Render sets PORT=10000) and no custom DB was configured (defaulted to localhost:3306)
+        if (rawUrl != null && rawUrl.contains("localhost:3306") && System.getenv("PORT") != null) {
+            rawUrl = "jdbc:postgresql://dpg-db5kdk59fdbs73d6fnng-a:5432/studystreak_yhri";
+            finalUser = "studystreak_yhri_user";
+            finalPass = "xNvwaTOXQeo1VnewAOXOy4lk9pt5J7Ed";
+            log.info("Detected cloud environment with PORT={}. Defaulting to Render PostgreSQL database.", System.getenv("PORT"));
+        }
+
         if (rawUrl != null && (rawUrl.startsWith("postgres://") || rawUrl.startsWith("postgresql://"))) {
             try {
                 URI uri = new URI(rawUrl.replace("postgresql://", "postgres://"));
@@ -57,6 +65,15 @@ public class DatabaseConfig {
             } catch (Exception e) {
                 log.warn("Failed to parse PostgreSQL URI: {}", e.getMessage());
             }
+        } else {
+            finalUrl = rawUrl;
+        }
+
+        if (System.getenv("DB_USER") != null && !System.getenv("DB_USER").isBlank()) {
+            finalUser = System.getenv("DB_USER");
+        }
+        if (System.getenv("DB_PASSWORD") != null && !System.getenv("DB_PASSWORD").isBlank()) {
+            finalPass = System.getenv("DB_PASSWORD");
         }
 
         HikariConfig config = new HikariConfig();
